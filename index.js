@@ -12,7 +12,7 @@ exports.handler = async (event) => {
   console.error({ destinationAccount, sharedSecret })
 
   const connection = await createConnection({
-    plugin: new Plugin({ server: 'btp+ws://:asdf@ilp.flossbank.io:7768' }),
+    plugin: new Plugin({ server: 'btp+ws://:asdf@172.31.10.54:7768' }),
     destinationAccount,
     sharedSecret: Buffer.from(sharedSecret, 'base64')
   })
