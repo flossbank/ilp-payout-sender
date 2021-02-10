@@ -1,0 +1,7 @@
+node_modules/
+**/*.swp
+.nyc_output
+.aws-sam
+.env.json
+out.txt
+coverage/
