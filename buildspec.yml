@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+        nodejs: 12
+  build:
+    commands:
+      - npm install --only=prod
+      - if echo "$CODEBUILD_BUILD_ARN" | grep -q "011767500962"; then export BUCKET_SUFFIX="-test"; else export BUCKET_SUFFIX=""; fi
+      - export BUCKET="flossbank-build-artifacts${BUCKET_SUFFIX}"
+      - echo $BUCKET
+      - aws cloudformation package --template-file template.yml --s3-bucket $BUCKET --output-template-file outputtemplate.yml
+artifacts:
+  type: zip
+  files:
+    - template.yml
+    - outputtemplate.yml

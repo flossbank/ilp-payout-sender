@@ -1,0 +1,44 @@
+{
+  "name": "ilp-payout-sender",
+  "version": "1.0.0",
+  "description": "ilp-payout-sender",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard --fix",
+    "ci-tests": "nyc --reporter=cobertura ava",
+    "test": "standard && echo 'WRITE SOME TESTS' || ava -v"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.543.0",
+    "ilp-plugin-btp": "^1.4.2",
+    "ilp-protocol-spsp": "^3.0.0",
+    "ilp-protocol-stream": "^2.6.5",
+    "mongodb": "^3.4.1",
+    "pino": "^6.5.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm t"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flossbank/ilp-payout-sender.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/flossbank/ilp-payout-sender/issues"
+  },
+  "homepage": "https://github.com/flossbank/ilp-payout-sender#readme",
+  "devDependencies": {
+    "ava": "^3.12.1",
+    "husky": "^4.2.5",
+    "nock": "^13.0.4",
+    "nyc": "^15.0.0",
+    "pino-pretty": "^4.1.0",
+    "sinon": "^9.0.1",
+    "standard": "^14.3.1"
+  }
+}

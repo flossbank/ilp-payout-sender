@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Sends money to ILP addresses
+Parameters:
+  MongoUri:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/api/db/mongo_uri'
+Resources:
+  ILPPayoutSenderDeadLetterQueue:
+    Type: AWS::SQS::Queue
+  ILPPayoutSenderQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ilp-payout-sender-input
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt ILPPayoutSenderDeadLetterQueue.Arn
+        maxReceiveCount: 3
+      VisibilityTimeout: 240
+  ILPPayoutSenderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 180
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: ./
+      Events:
+        DistributeOrgDonationsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ILPPayoutSenderQueue.Arn
+            BatchSize: 1
+      Policies:
+        - AmazonSQSFullAccess
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:ListKeys'
+            Resource: '*'
+      Environment:
+        Variables:
+          MONGO_URI: !Ref MongoUri
