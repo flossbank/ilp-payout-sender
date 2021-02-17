@@ -7,7 +7,7 @@ exports.handler = async (event) => {
   const {
     destination_account: destinationAccount,
     shared_secret: sharedSecret
-  } = await SPSP.query('$ilp-sandbox.uphold.com/PAeaa2ZLE7f9')
+  } = await SPSP.query('$spsp.staging.coil.com/donate/flossbanktest')
 
   console.error({ destinationAccount, sharedSecret })
 
@@ -24,3 +24,5 @@ exports.handler = async (event) => {
   stream.setSendMax(15000000)
   console.log('set max ')
 }
+
+exports.handler()
