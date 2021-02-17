@@ -7,7 +7,7 @@ exports.handler = async (event) => {
   const {
     destination_account: destinationAccount,
     shared_secret: sharedSecret
-  } = await SPSP.query('$ilp.uphold.com/yn8MbK2wan7P')
+  } = await SPSP.query('$ilp-sandbox.uphold.com/PAeaa2ZLE7f9')
 
   console.error({ destinationAccount, sharedSecret })
 
