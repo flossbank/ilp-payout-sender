@@ -2,6 +2,8 @@ const { createConnection } = require('ilp-protocol-stream')
 const SPSP = require('ilp-protocol-spsp')
 const Plugin = require('ilp-plugin-btp')
 
+const ILP_CONNECTOR_ADDR = 'Ilp-balancer-f7a914269dcebac1.elb.us-west-2.amazonaws.com'
+
 exports.handler = async (event) => {
   console.log('here event received', { event })
   const {
@@ -13,7 +15,7 @@ exports.handler = async (event) => {
 
   console.log('creating connection')
   const connection = await createConnection({
-    plugin: new Plugin({ server: 'btp+ws://:asdf@Ilp-balancer-ba6a9f6d19a44d7b.elb.us-west-2.amazonaws.com:7768' }),
+    plugin: new Plugin({ server: `btp+ws://:asdf@${ILP_CONNECTOR_ADDR}:7768` }),
     destinationAccount,
     sharedSecret: Buffer.from(sharedSecret, 'base64')
   })
