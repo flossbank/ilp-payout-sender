@@ -21,6 +21,6 @@ exports.handler = async (event) => {
   console.log('connection created')
   const stream = connection.createStream()
   console.log('stream created')
-  stream.setSendMax(150)
+  stream.setSendMax(15000000)
   console.log('set max ')
 }
