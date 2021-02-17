@@ -24,5 +24,3 @@ exports.handler = async (event) => {
   stream.setSendMax(15000000)
   console.log('set max ')
 }
-
-exports.handler()
