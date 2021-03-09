@@ -3,13 +3,14 @@ const SPSP = require('ilp-protocol-spsp')
 const Plugin = require('ilp-plugin-btp')
 
 const ILP_CONNECTOR_ADDR = 'Ilp-balancer-f7a914269dcebac1.elb.us-west-2.amazonaws.com'
+const wallet = '$ilp-sandbox.uphold.com/PAeaa2ZLE7f9'
 
 exports.handler = async (event) => {
   console.log('here event received', { event })
   const {
     destination_account: destinationAccount,
     shared_secret: sharedSecret
-  } = await SPSP.query('$spsp.staging.coil.com/donate/flossbanktest')
+  } = await SPSP.query(wallet)
 
   console.error({ destinationAccount, sharedSecret })
 
