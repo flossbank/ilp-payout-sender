@@ -18,7 +18,8 @@ exports.handler = async (event) => {
   const connection = await createConnection({
     plugin: new Plugin({ server: `btp+ws://:asdf@${ILP_CONNECTOR_ADDR}:7768` }),
     destinationAccount,
-    sharedSecret: Buffer.from(sharedSecret, 'base64')
+    sharedSecret: Buffer.from(sharedSecret, 'base64'),
+    slippage: 1.0
   })
 
   console.log('connection created')
