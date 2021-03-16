@@ -3,7 +3,8 @@ const SPSP = require('ilp-protocol-spsp')
 const Plugin = require('ilp-plugin-btp')
 
 const ILP_CONNECTOR_ADDR = 'Ilp-balancer-f7a914269dcebac1.elb.us-west-2.amazonaws.com'
-const wallet = '$spsp.staging.coil.com/donate/flossbanktest' // '$ilp-sandbox.uphold.com/PAeaa2ZLE7f9'
+// const wallet = '$spsp.staging.coil.com/donate/flossbanktest'
+const wallet = '$ilp-sandbox.uphold.com/PAeaa2ZLE7f9'
 
 const sleep = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms)
