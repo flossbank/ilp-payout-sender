@@ -24,6 +24,14 @@ exports.handler = async (event) => {
 
   console.log('connection created')
   const stream = connection.createStream()
+
+  stream.on('outgoing_money', () => {
+    console.log('received outgoingmoney event')
+  })
+  stream.on('close', () => {
+    console.log('stream closed')
+  })
+
   console.log('stream created')
   stream.setSendMax(15000000)
   console.log('set max ')
