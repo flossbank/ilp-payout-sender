@@ -5,6 +5,10 @@ const Plugin = require('ilp-plugin-btp')
 const ILP_CONNECTOR_ADDR = 'Ilp-balancer-f7a914269dcebac1.elb.us-west-2.amazonaws.com'
 const wallet = '$spsp.staging.coil.com/donate/flossbanktest' // '$ilp-sandbox.uphold.com/PAeaa2ZLE7f9'
 
+const sleep = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms)
+})
+
 exports.handler = async (event) => {
   console.log('here event received', { event })
   const {
@@ -36,5 +40,5 @@ exports.handler = async (event) => {
   stream.setSendMax(15000000)
   console.log('set max ')
 
-  setTimeout(() => {}, 30000)
+  return sleep(30000)
 }
