@@ -35,4 +35,6 @@ exports.handler = async (event) => {
   console.log('stream created')
   stream.setSendMax(15000000)
   console.log('set max ')
+
+  setTimeout(() => {}, 30000)
 }
