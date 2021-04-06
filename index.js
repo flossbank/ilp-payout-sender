@@ -9,25 +9,34 @@ const { ILP_CONNECTOR_ADDR } = process.env
 function sendMoney (connection, amount) {
   return new Promise((resolve, reject) => {
     const state = {
-      moneySent: false
+      moneySent: false,
+      totalSent: 0
     }
 
     console.log('Creating stream...')
     const stream = connection.createStream()
     console.log('Stream created successfully')
 
-    stream.on('outgoing_money', () => {
-      console.log('Money sent successfully!')
-      state.moneySent = true
+    stream.on('outgoing_money', (sentAmount) => {
+      console.log('Money sent successfully (%d)!', sentAmount)
+
+      state.totalSent += sentAmount
+
+      if (state.totalSent === amount) {
+        state.moneySent = true
+
+        console.log('All money is sent. Closing stream...')
+        stream.destroy()
+      }
     })
 
-    stream.on('close', () => {
+    stream.once('close', () => {
       console.log('Payment stream closed')
       if (state.moneySent) resolve()
       else reject(new Error('Stream closed without emitting outgoing_money event'))
     })
 
-    stream.on('error', (err) => {
+    stream.once('error', (err) => {
       reject(err)
     })
 
@@ -39,7 +48,7 @@ function sendMoney (connection, amount) {
 exports.handler = async (event) => {
   const { walletAddress, amount } = event
 
-  console.log('Sending %d to %s', walletAddress, amount)
+  console.log('Sending %d to %s', amount, walletAddress)
 
   const {
     destination_account: destinationAccount,
@@ -49,8 +58,10 @@ exports.handler = async (event) => {
   console.log({ destinationAccount, sharedSecret })
 
   console.log('Creating connection to Flossbank ILP connector...')
+  const plugin = new Plugin({ server: `btp+ws://:asdf@${ILP_CONNECTOR_ADDR}:7768` })
+
   const connection = await createConnection({
-    plugin: new Plugin({ server: `btp+ws://:asdf@${ILP_CONNECTOR_ADDR}:7768` }),
+    plugin,
     destinationAccount,
     sharedSecret: Buffer.from(sharedSecret, 'base64'),
     slippage: 1.0
@@ -58,5 +69,14 @@ exports.handler = async (event) => {
 
   console.log('Connection created successfully')
 
-  return sendMoney(connection, amount)
+  await sendMoney(connection, amount)
+
+  console.log('Closing connection to ILP connector...')
+  await connection.end()
+
+  // connection will probably disconnect the plugin automatically
+  if (plugin.isConnected()) {
+    console.log('Disconnecting from BTP server')
+    await plugin.disconnect()
+  }
 }
