@@ -20,7 +20,9 @@ function sendMoney (connection, amount) {
     stream.on('outgoing_money', (sentAmount) => {
       console.log('Money sent successfully (%d)!', sentAmount)
 
-      state.totalSent += sentAmount
+      const sentAmountInt = parseInt(sentAmount, 10)
+
+      state.totalSent += sentAmountInt
 
       if (state.totalSent === amount) {
         state.moneySent = true
