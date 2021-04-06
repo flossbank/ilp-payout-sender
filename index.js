@@ -2,24 +2,53 @@ const { createConnection } = require('ilp-protocol-stream')
 const SPSP = require('ilp-protocol-spsp')
 const Plugin = require('ilp-plugin-btp')
 
-const ILP_CONNECTOR_ADDR = 'Ilp-balancer-f7a914269dcebac1.elb.us-west-2.amazonaws.com'
-// const wallet = '$spsp.staging.coil.com/donate/flossbanktest'
-const wallet = '$ilp-sandbox.uphold.com/PAeaa2ZLE7f9'
+// the address of the internal NLB that the lambda will call to connect to the ILP connector
+const { ILP_CONNECTOR_ADDR } = process.env
 
-const sleep = (ms) => new Promise((resolve) => {
-  setTimeout(resolve, ms)
-})
+// creates stream, sets max, resolves when stream acknowledges outgoing money
+function sendMoney (connection, amount) {
+  return new Promise((resolve, reject) => {
+    const state = {
+      moneySent: false
+    }
+
+    console.log('Creating stream...')
+    const stream = connection.createStream()
+    console.log('Stream created successfully')
+
+    stream.on('outgoing_money', () => {
+      console.log('Money sent successfully!')
+      state.moneySent = true
+    })
+
+    stream.on('close', () => {
+      console.log('Payment stream closed')
+      if (state.moneySent) resolve()
+      else reject(new Error('Stream closed without emitting outgoing_money event'))
+    })
+
+    stream.on('error', (err) => {
+      reject(err)
+    })
+
+    console.log('Setting stream max to specified amount (%d)', amount)
+    stream.setSendMax(amount)
+  })
+}
 
 exports.handler = async (event) => {
-  console.log('here event received', { event })
+  const { walletAddress, amount } = event
+
+  console.log('Sending %d to %s', walletAddress, amount)
+
   const {
     destination_account: destinationAccount,
     shared_secret: sharedSecret
-  } = await SPSP.query(wallet)
+  } = await SPSP.query(walletAddress)
 
-  console.error({ destinationAccount, sharedSecret })
+  console.log({ destinationAccount, sharedSecret })
 
-  console.log('creating connection')
+  console.log('Creating connection to Flossbank ILP connector...')
   const connection = await createConnection({
     plugin: new Plugin({ server: `btp+ws://:asdf@${ILP_CONNECTOR_ADDR}:7768` }),
     destinationAccount,
@@ -27,19 +56,7 @@ exports.handler = async (event) => {
     slippage: 1.0
   })
 
-  console.log('connection created')
-  const stream = connection.createStream()
+  console.log('Connection created successfully')
 
-  stream.on('outgoing_money', () => {
-    console.log('received outgoingmoney event')
-  })
-  stream.on('close', () => {
-    console.log('stream closed')
-  })
-
-  console.log('stream created')
-  stream.setSendMax(15000000)
-  console.log('set max ')
-
-  return sleep(30000)
+  return sendMoney(connection, amount)
 }

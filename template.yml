@@ -32,6 +32,7 @@ Resources:
       Policies:
         - AmazonSQSFullAccess
         - AmazonDynamoDBFullAccess
+        - AWSLambdaVPCAccessExecutionRole
         - Statement:
           - Effect: Allow
             Action:
