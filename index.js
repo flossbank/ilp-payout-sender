@@ -18,9 +18,9 @@ function sendMoney (connection, amount) {
     console.log('Stream created successfully')
 
     stream.on('outgoing_money', (sentAmount) => {
-      console.log('Money sent successfully (%d)!', sentAmount)
-
       const sentAmountInt = parseInt(sentAmount, 10)
+
+      console.log('Money sent successfully (%d)!', sentAmountInt)
 
       state.totalSent += sentAmountInt
 
@@ -29,6 +29,8 @@ function sendMoney (connection, amount) {
 
         console.log('All money is sent. Closing stream...')
         stream.destroy()
+      } else {
+        console.log('%d !== %d... still waiting for all money to send', state.totalSent, amount)
       }
     })
 
