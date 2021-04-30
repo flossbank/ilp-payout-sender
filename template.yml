@@ -15,16 +15,16 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt ILPPayoutSenderDeadLetterQueue.Arn
         maxReceiveCount: 3
-      VisibilityTimeout: 240
+      VisibilityTimeout: 960
   ILPPayoutSenderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Timeout: 180
+      Timeout: 900
       Handler: index.handler
       Runtime: nodejs12.x
       CodeUri: ./
       Events:
-        DistributeOrgDonationsEvent:
+        ILPPayoutSenderEvent:
           Type: SQS
           Properties:
             Queue: !GetAtt ILPPayoutSenderQueue.Arn
