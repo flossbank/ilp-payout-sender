@@ -21,7 +21,7 @@ exports.handler = async (event) => {
   const log = Pino()
   const dynamo = new Dynamo({ log, docs })
   const config = new Config({ log, kms })
-  const ilp = new Ilp({ log })
+  const ilp = new Ilp({ log, config })
   const db = new Db({ log, config })
   await db.connect()
 
