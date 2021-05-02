@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "standard --fix",
     "ci-tests": "nyc --reporter=cobertura ava",
-    "test": "standard && echo 'WRITE SOME TESTS' || ava -v"
+    "test": "standard && ava -v"
   },
   "dependencies": {
     "aws-sdk": "^2.543.0",
@@ -35,6 +35,7 @@
   "devDependencies": {
     "ava": "^3.12.1",
     "husky": "^4.2.5",
+    "mongodb-memory-server": "^6.9.6",
     "nock": "^13.0.4",
     "nyc": "^15.0.0",
     "pino-pretty": "^4.1.0",
