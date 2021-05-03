@@ -149,3 +149,13 @@ test('updatePayoutsToPaid', async (t) => {
       p.payoutEndpoint.endpoint === 'test-ilp-pointer')
   }))
 })
+
+test('close closes it', async (t) => {
+  const mongo = new Mongo({})
+  await mongo.close() // nothing to close here
+
+  mongo.mongoClient = { close: sinon.stub() }
+  await mongo.close()
+
+  t.true(mongo.mongoClient.close.calledOnce)
+})
