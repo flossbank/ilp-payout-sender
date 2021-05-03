@@ -1,0 +1,24 @@
+name: Node.js CI
+
+on:
+  pull_request:
+    branches: [ production, staging ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: npm run ci-tests
+    - uses: 5monkeys/cobertura-action@master
+      with:
+        path: coverage/cobertura-coverage.xml
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        show_line: true
+        show_branch: true
+        minimum_coverage: 85
