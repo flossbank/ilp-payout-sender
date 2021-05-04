@@ -32,11 +32,6 @@ Resources:
       Handler: index.handler
       Runtime: nodejs12.x
       CodeUri: ./
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref ILPSecurityGroup
-        SubnetIds:
-          - !Ref ILPSubnet
       Events:
         ILPPayoutSenderEvent:
           Type: SQS
@@ -47,6 +42,13 @@ Resources:
         - AmazonSQSFullAccess
         - AmazonDynamoDBFullAccess
         - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+          - Effect: "Allow"
+            Action:
+              - "ec2:CreateNetworkInterface"
+              - "ec2:DescribeNetworkInterfaces"
+              - "ec2:DeleteNetworkInterface"
+            Resource: "*"
         - Statement:
           - Effect: Allow
             Action:
