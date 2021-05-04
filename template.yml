@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Sends money to ILP addresses
 Parameters:
+  ILPSecurityGroup:
+    Type: String
+    Description: The security group that the lambda should be part of to access the ILP connector
+  ILPSubnet:
+    Type: String
+    Description: The subnet that the lambda should have to access the ILP connector
   MongoUri:
     Type: AWS::SSM::Parameter::Value<String>
     Default: '/api/db/mongo_uri'
@@ -26,6 +32,11 @@ Resources:
       Handler: index.handler
       Runtime: nodejs12.x
       CodeUri: ./
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref ILPSecurityGroup
+        SubnetIds:
+          - !Ref ILPSubnet
       Events:
         ILPPayoutSenderEvent:
           Type: SQS
