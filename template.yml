@@ -5,6 +5,9 @@ Parameters:
   MongoUri:
     Type: AWS::SSM::Parameter::Value<String>
     Default: '/api/db/mongo_uri'
+  IlpAddress:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/lambda/ilp/internal_lb_address'
 Resources:
   ILPPayoutSenderDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -42,3 +45,4 @@ Resources:
       Environment:
         Variables:
           MONGO_URI: !Ref MongoUri
+          ILP_CONNECTOR_ADDRESS: !Ref IlpAddress
