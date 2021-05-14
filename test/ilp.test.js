@@ -141,3 +141,36 @@ test.serial('sendIlpPayment', async (t) => {
   t.deepEqual(success, true)
   t.deepEqual(remainingAmount, 0)
 })
+
+test.serial('sendIlpPayment | has remaining balance', async (t) => {
+  const { ilp } = t.context
+  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 10000 })
+
+  const { success, remainingAmount } = await ilp.sendIlpPayment({
+    amount: 1234,
+    pointer: '$helloworld'
+  })
+
+  // it should query the pointer
+  t.deepEqual(SPSP.query.lastCall.args, ['$helloworld'])
+
+  // it should create the connection
+  t.true(IlpProtocolStream.createConnection.calledOnce)
+  const [connArgs] = IlpProtocolStream.createConnection.lastCall.args
+
+  t.is(connArgs.destinationAccount, 'abc')
+  t.deepEqual(connArgs.sharedSecret, Buffer.from('xyz', 'base64'))
+  t.is(connArgs.slippage, 1.0)
+
+  // it should send the money (and the correct amount)
+  t.true(ilp.sendMoney.calledOnce)
+  const [sendArgs] = ilp.sendMoney.lastCall.args
+
+  t.is(sendArgs.ilpAmount, 12340000)
+
+  // it should end the connection
+  t.true(t.context.connection.end.calledOnce)
+
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 1)
+})
