@@ -113,7 +113,7 @@ test.serial('sendIlpPayment', async (t) => {
   const { ilp } = t.context
   ilp.sendMoney = sinon.stub().resolves({ success: true, remainingAmount: 0 })
 
-  const result = await ilp.sendIlpPayment({
+  const { success, remainingAmount } = await ilp.sendIlpPayment({
     amount: 1234,
     pointer: '$helloworld'
   })
@@ -138,5 +138,6 @@ test.serial('sendIlpPayment', async (t) => {
   // it should end the connection
   t.true(t.context.connection.end.calledOnce)
 
-  console.log('here', result)
+  t.deepEqual(success, true)
+  t.deepEqual(remainingAmount, 0)
 })
