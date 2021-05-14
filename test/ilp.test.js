@@ -61,7 +61,9 @@ test.serial('sendMoney | happy path', async (t) => {
   // since destroy was called, we close the stream and the promise should resolve
   fakeStream.emit('close')
 
-  await result
+  const { success, remainingAmount } = await result
+  t.deepEqual(success, true)
+  t.deepEqual(remainingAmount, 0)
 })
 
 test.serial('sendMoney | stream closes before all money is sent -> reject', async (t) => {
@@ -83,7 +85,9 @@ test.serial('sendMoney | stream closes before all money is sent -> reject', asyn
   // calling this before all 1234 was sent, simulating an expected close
   fakeStream.emit('close')
 
-  await t.throwsAsync(result, { message: 'Stream closed without sending all money' })
+  const { success, remainingAmount } = await result
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 234)
 })
 
 test.serial('sendMoney | error -> reject', async (t) => {
@@ -107,9 +111,9 @@ test.serial('sendMoney | error -> reject', async (t) => {
 
 test.serial('sendIlpPayment', async (t) => {
   const { ilp } = t.context
-  ilp.sendMoney = sinon.stub()
+  ilp.sendMoney = sinon.stub().resolves({ success: true, remainingAmount: 0 })
 
-  await ilp.sendIlpPayment({
+  const result = await ilp.sendIlpPayment({
     amount: 1234,
     pointer: '$helloworld'
   })
@@ -133,4 +137,6 @@ test.serial('sendIlpPayment', async (t) => {
 
   // it should end the connection
   t.true(t.context.connection.end.calledOnce)
+
+  console.log('here', result)
 })

@@ -1,5 +1,6 @@
 const test = require('ava')
 const sinon = require('sinon')
+const ulid = require('ulid')
 const { MongoMemoryServer } = require('mongodb-memory-server')
 const Config = require('../lib/config')
 const Mongo = require('../lib/mongo')
@@ -11,6 +12,9 @@ test.before(async (t) => {
 
   const mongo = new MongoMemoryServer()
   const mongoUri = await mongo.getUri()
+
+  ulid.ulid = sinon.stub().returns('zzzzzzzzzzzz')
+  Date.now = sinon.stub().returns(1234)
 
   config.decrypt = sinon.stub().returns(mongoUri)
   t.context.Mongo = new Mongo({ config, log: { info: sinon.stub() } })
@@ -148,6 +152,41 @@ test('updatePayoutsToPaid', async (t) => {
       p.payoutEndpoint.type === 'ilp' &&
       p.payoutEndpoint.endpoint === 'test-ilp-pointer')
   }))
+})
+
+test('addDifferentialPayout', async (t) => {
+  const { insertedId: userId } = await t.context.Mongo.db.collection('users').insertOne({
+    name: 'roger',
+    payoutInfo: {
+      ilpPointer: 'test-ilp-pointer'
+    },
+    payouts: [
+      {
+        id: 'aaaaaaaaaaa3',
+        amount: 150,
+        donationIds: ['bbbbbbbbbbbb'],
+        adIds: ['dddddddddddd'],
+        timestamp: 123456
+      }
+    ]
+  })
+
+  await t.context.Mongo.addDifferentialPayout({ maintainerId: userId.toString(), remainingAmount: 1000 })
+
+  const maintainerAfterUpdate = await t.context.Mongo.db.collection('users').findOne({
+    _id: userId
+  })
+
+  t.deepEqual(maintainerAfterUpdate.payouts.length, 2)
+
+  const payoutInserted = maintainerAfterUpdate.payouts.find((p) => p.id === 'zzzzzzzzzzzz')
+  t.deepEqual(payoutInserted, {
+    id: 'zzzzzzzzzzzz',
+    timestamp: 1234,
+    amount: 1000,
+    donationIds: [],
+    adIds: []
+  })
 })
 
 test('close closes it', async (t) => {

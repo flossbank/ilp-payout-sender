@@ -14,7 +14,8 @@
     "ilp-protocol-spsp": "^3.0.0",
     "ilp-protocol-stream": "^2.6.5",
     "mongodb": "^3.4.1",
-    "pino": "^6.5.1"
+    "pino": "^6.5.1",
+    "ulid": "^2.3.0"
   },
   "husky": {
     "hooks": {
