@@ -147,7 +147,7 @@ test.serial('sendIlpPayment', async (t) => {
 
 test.serial('sendIlpPayment | has remaining balance', async (t) => {
   const { ilp } = t.context
-  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 10000 })
+  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 10000, error: new Error('halp') })
 
   const { success, remainingAmount } = await ilp.sendIlpPayment({
     amount: 1234,
@@ -176,6 +176,16 @@ test.serial('sendIlpPayment | has remaining balance', async (t) => {
 
   t.deepEqual(success, false)
   t.deepEqual(remainingAmount, 1)
+})
+
+test.serial('sendIlpPayment | errored and sent no money at all', async (t) => {
+  const { ilp } = t.context
+  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 12340000, error: new Error('halp') })
+
+  await t.throwsAsync(async () => await ilp.sendIlpPayment({
+    amount: 1234,
+    pointer: '$helloworld'
+  }))
 })
 
 test.serial('sendMoney | error -> setSendMax rejects unexpectedly', async (t) => {
