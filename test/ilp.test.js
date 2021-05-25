@@ -61,10 +61,12 @@ test.serial('sendMoney | happy path', async (t) => {
   // since destroy was called, we close the stream and the promise should resolve
   fakeStream.emit('close')
 
-  await result
+  const { success, remainingAmount } = await result
+  t.deepEqual(success, true)
+  t.deepEqual(remainingAmount, 0)
 })
 
-test.serial('sendMoney | stream closes before all money is sent -> reject', async (t) => {
+test.serial('sendMoney | stream closes before all money is sent -> report error and remaining amount', async (t) => {
   const { ilp } = t.context
   const fakeStream = new EventEmitter()
   fakeStream.setSendMax = sinon.stub()
@@ -83,10 +85,12 @@ test.serial('sendMoney | stream closes before all money is sent -> reject', asyn
   // calling this before all 1234 was sent, simulating an expected close
   fakeStream.emit('close')
 
-  await t.throwsAsync(result, { message: 'Stream closed without sending all money' })
+  const { success, remainingAmount } = await result
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 234)
 })
 
-test.serial('sendMoney | error -> reject', async (t) => {
+test.serial('sendMoney | error -> sends back remaining amount', async (t) => {
   const { ilp } = t.context
   const fakeStream = new EventEmitter()
   fakeStream.setSendMax = sinon.stub()
@@ -100,16 +104,19 @@ test.serial('sendMoney | error -> reject', async (t) => {
 
   const result = ilp.sendMoney(params)
 
+  fakeStream.emit('outgoing_money', '1000')
   fakeStream.emit('error', new Error('halp!'))
 
-  await t.throwsAsync(result, { message: 'halp!' })
+  const { success, remainingAmount } = await result
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 234)
 })
 
 test.serial('sendIlpPayment', async (t) => {
   const { ilp } = t.context
-  ilp.sendMoney = sinon.stub()
+  ilp.sendMoney = sinon.stub().resolves({ success: true, remainingAmount: 0 })
 
-  await ilp.sendIlpPayment({
+  const { success, remainingAmount } = await ilp.sendIlpPayment({
     amount: 1234,
     pointer: '$helloworld'
   })
@@ -133,4 +140,94 @@ test.serial('sendIlpPayment', async (t) => {
 
   // it should end the connection
   t.true(t.context.connection.end.calledOnce)
+
+  t.deepEqual(success, true)
+  t.deepEqual(remainingAmount, 0)
+})
+
+test.serial('sendIlpPayment | has remaining balance', async (t) => {
+  const { ilp } = t.context
+  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 10000, error: new Error('halp') })
+
+  const { success, remainingAmount } = await ilp.sendIlpPayment({
+    amount: 1234,
+    pointer: '$helloworld'
+  })
+
+  // it should query the pointer
+  t.deepEqual(SPSP.query.lastCall.args, ['$helloworld'])
+
+  // it should create the connection
+  t.true(IlpProtocolStream.createConnection.calledOnce)
+  const [connArgs] = IlpProtocolStream.createConnection.lastCall.args
+
+  t.is(connArgs.destinationAccount, 'abc')
+  t.deepEqual(connArgs.sharedSecret, Buffer.from('xyz', 'base64'))
+  t.is(connArgs.slippage, 1.0)
+
+  // it should send the money (and the correct amount)
+  t.true(ilp.sendMoney.calledOnce)
+  const [sendArgs] = ilp.sendMoney.lastCall.args
+
+  t.is(sendArgs.ilpAmount, 12340000)
+
+  // it should end the connection
+  t.true(t.context.connection.end.calledOnce)
+
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 1)
+})
+
+test.serial('sendIlpPayment | errored and sent no money at all', async (t) => {
+  const { ilp } = t.context
+  ilp.sendMoney = sinon.stub().resolves({ success: false, remainingAmount: 12340000, error: new Error('halp') })
+
+  await t.throwsAsync(async () => await ilp.sendIlpPayment({
+    amount: 1234,
+    pointer: '$helloworld'
+  }))
+})
+
+test.serial('sendMoney | errored within a callback handler', async (t) => {
+  const { ilp } = t.context
+  const fakeStream = new EventEmitter()
+
+  const params = {
+    ilpAmount: 1234,
+    connection: {
+      createStream: sinon.stub().returns(fakeStream)
+    }
+  }
+
+  fakeStream.destroy = sinon.stub().throws(new Error('error'))
+  fakeStream.setSendMax = sinon.stub()
+
+  // not awaiting the promise here, since we emit events from the stream
+  const result = ilp.sendMoney(params)
+
+  // Emit an event so that the handler throws
+  fakeStream.emit('outgoing_money', '1234')
+
+  const { success, remainingAmount, error } = await result
+  t.deepEqual(error.message, 'error')
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 0)
+})
+
+test.serial('sendMoney | error -> setSendMax rejects unexpectedly', async (t) => {
+  const { ilp } = t.context
+  const fakeStream = new EventEmitter()
+  fakeStream.setSendMax = sinon.stub().throwsException()
+
+  const params = {
+    ilpAmount: 1234,
+    connection: {
+      createStream: sinon.stub().returns(fakeStream)
+    }
+  }
+
+  const { success, remainingAmount } = await ilp.sendMoney(params)
+
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 1234)
 })
