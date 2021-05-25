@@ -127,11 +127,6 @@ test('process | pending payouts only partial paid', async (t) => {
   const input = { ...deps, record }
 
   await t.throwsAsync(Process.process(input))
-  // try {
-  //   await Process.process(input)
-  // } catch (e) {
-  //   t.deepEqual(e.message, 'For some reason ILP sender failed')
-  // }
 
   // it should lock the maintainer id
   t.deepEqual(deps.dynamo.lockMaintainer.lastCall.args, [{ maintainerId: 'aaaaaaaaaaaa' }])
