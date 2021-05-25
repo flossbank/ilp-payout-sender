@@ -101,7 +101,7 @@ test('process | pending payouts', async (t) => {
 
 test('process | pending payouts only partial paid', async (t) => {
   // Ilp says it didn't complete 1000 worth of the payouts
-  t.context.deps.ilp.sendIlpPayment.resolves({ success: false, remainingAmount: 1000 })
+  t.context.deps.ilp.sendIlpPayment.resolves({ success: false, remainingAmount: 1000, error: new Error('halp') })
 
   const record = {
     body: JSON.stringify({
@@ -126,7 +126,7 @@ test('process | pending payouts only partial paid', async (t) => {
 
   const input = { ...deps, record }
 
-  await t.throwsAsync(async () => await Process.process(input))
+  await t.throwsAsync(Process.process(input))
   // try {
   //   await Process.process(input)
   // } catch (e) {

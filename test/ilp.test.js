@@ -66,7 +66,7 @@ test.serial('sendMoney | happy path', async (t) => {
   t.deepEqual(remainingAmount, 0)
 })
 
-test.serial('sendMoney | stream closes before all money is sent -> reject', async (t) => {
+test.serial('sendMoney | stream closes before all money is sent -> report error and remaining amount', async (t) => {
   const { ilp } = t.context
   const fakeStream = new EventEmitter()
   fakeStream.setSendMax = sinon.stub()
@@ -186,6 +186,32 @@ test.serial('sendIlpPayment | errored and sent no money at all', async (t) => {
     amount: 1234,
     pointer: '$helloworld'
   }))
+})
+
+test.serial('sendMoney | errored within a callback handler', async (t) => {
+  const { ilp } = t.context
+  const fakeStream = new EventEmitter()
+
+  const params = {
+    ilpAmount: 1234,
+    connection: {
+      createStream: sinon.stub().returns(fakeStream)
+    }
+  }
+
+  fakeStream.destroy = sinon.stub().throws(new Error('error'))
+  fakeStream.setSendMax = sinon.stub()
+
+  // not awaiting the promise here, since we emit events from the stream
+  const result = ilp.sendMoney(params)
+
+  // Emit an event so that the handler throws
+  fakeStream.emit('outgoing_money', '1234')
+
+  const { success, remainingAmount, error } = await result
+  t.deepEqual(error.message, 'error')
+  t.deepEqual(success, false)
+  t.deepEqual(remainingAmount, 0)
 })
 
 test.serial('sendMoney | error -> setSendMax rejects unexpectedly', async (t) => {
